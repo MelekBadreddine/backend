@@ -1,7 +1,9 @@
 package tn.procan.backend.controller;
 
-import com.github.dockerjava.api.model.Container;
+import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.model.Image;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/docker")
+@Tag(name = "Docker API", description = "Docker operations")
 public class DockerController {
 
     private final DockerService dockerService;
@@ -21,29 +24,25 @@ public class DockerController {
     }
 
     @GetMapping("/images")
+    @Operation(summary = "List all Docker images")
     public ResponseEntity<List<Image>> listImages() {
         return ResponseEntity.ok(dockerService.listImages());
     }
 
-    @GetMapping("/containers")
-    public ResponseEntity<List<Container>> listContainers() {
-        return ResponseEntity.ok(dockerService.listContainers());
-    }
-
     @PostMapping("/images/pull")
-    public ResponseEntity<String> pullImage(@RequestParam String imageName) {
-        try {
-            dockerService.pullImage(imageName);
+    @Operation(summary = "Pull a Docker image")
+    public ResponseEntity<String> pullImage(@RequestParam String repository, @RequestParam String tag) throws InterruptedException {
+        boolean success = dockerService.pullImage(repository, tag);
+        if (success) {
             return ResponseEntity.ok("Image pulled successfully");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return ResponseEntity.internalServerError().body("Error pulling image: " + e.getMessage());
+        } else {
+            return ResponseEntity.badRequest().body("Failed to pull image");
         }
     }
 
     @PostMapping("/containers/create")
-    public ResponseEntity<String> createContainer(@RequestParam String imageName) {
-        String containerId = dockerService.createContainer(imageName);
-        return ResponseEntity.ok("Container created with ID: " + containerId);
+    @Operation(summary = "Create a Docker container")
+    public ResponseEntity<CreateContainerResponse> createContainer(@RequestParam String imageName) {
+        return ResponseEntity.ok(dockerService.createContainer(imageName));
     }
 }
