@@ -16,7 +16,7 @@ public class DockerConfig {
     @Bean
     public DockerClient dockerClient() {
         DockerHttpClient httpClient = new ApacheDockerHttpClient.Builder()
-                .dockerHost(URI.create("unix:///var/run/docker.sock"))
+                .dockerHost(URI.create("tcp://192.168.61.131:2375"))
                 .maxConnections(100)
                 .connectionTimeout(Duration.ofSeconds(30))
                 .responseTimeout(Duration.ofSeconds(45))
