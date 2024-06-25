@@ -42,7 +42,18 @@ public class DockerController {
 
     @PostMapping("/containers/create")
     @Operation(summary = "Create a Docker container")
-    public ResponseEntity<CreateContainerResponse> createContainer(@RequestParam String imageName) {
-        return ResponseEntity.ok(dockerService.createContainer(imageName));
+    public ResponseEntity<CreateContainerResponse> createContainer(
+            @RequestParam String imageName,
+            @RequestParam int hostPort,
+            @RequestParam int containerPort
+    ) {
+        return ResponseEntity.ok(dockerService.createContainer(imageName, hostPort, containerPort));
+    }
+
+    @PostMapping("/containers/start")
+    @Operation(summary = "Start a Docker container")
+    public ResponseEntity<String> startContainer(@RequestParam String containerId) {
+        dockerService.startContainer(containerId);
+        return ResponseEntity.ok("Container started successfully: " + containerId);
     }
 }
