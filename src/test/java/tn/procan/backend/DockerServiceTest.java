@@ -1,15 +1,8 @@
 package tn.procan.backend;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.ListImagesCmd;
-import com.github.dockerjava.api.command.PullImageCmd;
-import com.github.dockerjava.api.command.PullImageResultCallback;
-import com.github.dockerjava.api.command.StartContainerCmd;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.Image;
-import com.github.dockerjava.api.model.Ports;
+import com.github.dockerjava.api.command.*;
+import com.github.dockerjava.api.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -66,6 +59,22 @@ class DockerServiceTest {
     }
 
     @Test
+    void deleteImage() {
+        String imageName = "test/image:latest";
+        RemoveImageCmd removeImageCmd = mock(RemoveImageCmd.class);
+
+        when(dockerClient.removeImageCmd(imageName)).thenReturn(removeImageCmd);
+        when(removeImageCmd.withForce(true)).thenReturn(removeImageCmd);
+        doNothing().when(removeImageCmd).exec();
+
+        assertDoesNotThrow(() -> dockerService.deleteImage(imageName));
+
+        verify(dockerClient).removeImageCmd(imageName);
+        verify(removeImageCmd).withForce(true);
+        verify(removeImageCmd).exec();
+    }
+
+    @Test
     void createContainer() {
         String imageName = "test/image";
         int hostPort = 9090;
@@ -101,5 +110,67 @@ class DockerServiceTest {
         dockerService.startContainer(containerId);
         verify(dockerClient).startContainerCmd(containerId);
         verify(startContainerCmd).exec();
+    }
+
+    @Test
+    void listContainers() {
+        List<Container> expectedContainers = Arrays.asList(new Container(), new Container());
+        ListContainersCmd listContainersCmd = mock(ListContainersCmd.class);
+
+        when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
+        when(listContainersCmd.withShowAll(true)).thenReturn(listContainersCmd);
+        when(listContainersCmd.exec()).thenReturn(expectedContainers);
+
+        List<Container> actualContainers = dockerService.listContainers();
+
+        assertEquals(expectedContainers, actualContainers);
+        verify(dockerClient).listContainersCmd();
+        verify(listContainersCmd).withShowAll(true);
+        verify(listContainersCmd).exec();
+    }
+
+    @Test
+    void listRunningContainers() {
+        List<Container> expectedContainers = Arrays.asList(new Container(), new Container());
+        ListContainersCmd listContainersCmd = mock(ListContainersCmd.class);
+
+        when(dockerClient.listContainersCmd()).thenReturn(listContainersCmd);
+        when(listContainersCmd.exec()).thenReturn(expectedContainers);
+
+        List<Container> actualContainers = dockerService.listRunningContainers();
+
+        assertEquals(expectedContainers, actualContainers);
+        verify(dockerClient).listContainersCmd();
+        verify(listContainersCmd).exec();
+    }
+
+    @Test
+    void stopContainer() {
+        String containerId = "testContainerId";
+        StopContainerCmd stopContainerCmd = mock(StopContainerCmd.class);
+
+        when(dockerClient.stopContainerCmd(containerId)).thenReturn(stopContainerCmd);
+        doNothing().when(stopContainerCmd).exec();
+
+        assertDoesNotThrow(() -> dockerService.stopContainer(containerId));
+
+        verify(dockerClient).stopContainerCmd(containerId);
+        verify(stopContainerCmd).exec();
+    }
+
+    @Test
+    void deleteContainer() {
+        String containerId = "testContainerId";
+        RemoveContainerCmd removeContainerCmd = mock(RemoveContainerCmd.class);
+
+        when(dockerClient.removeContainerCmd(containerId)).thenReturn(removeContainerCmd);
+        when(removeContainerCmd.withForce(true)).thenReturn(removeContainerCmd);
+        doNothing().when(removeContainerCmd).exec();
+
+        assertDoesNotThrow(() -> dockerService.deleteContainer(containerId));
+
+        verify(dockerClient).removeContainerCmd(containerId);
+        verify(removeContainerCmd).withForce(true);
+        verify(removeContainerCmd).exec();
     }
 }

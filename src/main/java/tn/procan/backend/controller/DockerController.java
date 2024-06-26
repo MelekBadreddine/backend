@@ -1,6 +1,7 @@
 package tn.procan.backend.controller;
 
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.api.model.Image;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,13 @@ public class DockerController {
         }
     }
 
+    @DeleteMapping("/images")
+    @Operation(summary = "Delete a Docker image")
+    public ResponseEntity<String> deleteImage(@RequestParam String imageName) {
+        dockerService.deleteImage(imageName);
+        return ResponseEntity.ok("Image deleted successfully: " + imageName);
+    }
+
     @PostMapping("/containers/create")
     @Operation(summary = "Create a Docker container")
     public ResponseEntity<CreateContainerResponse> createContainer(
@@ -55,5 +63,31 @@ public class DockerController {
     public ResponseEntity<String> startContainer(@RequestParam String containerId) {
         dockerService.startContainer(containerId);
         return ResponseEntity.ok("Container started successfully: " + containerId);
+    }
+
+    @GetMapping("/containers")
+    @Operation(summary = "List all Docker containers")
+    public ResponseEntity<List<Container>> listContainers() {
+        return ResponseEntity.ok(dockerService.listContainers());
+    }
+
+    @GetMapping("/containers/running")
+    @Operation(summary = "List running Docker containers")
+    public ResponseEntity<List<Container>> listRunningContainers() {
+        return ResponseEntity.ok(dockerService.listRunningContainers());
+    }
+
+    @PostMapping("/containers/stop")
+    @Operation(summary = "Stop a Docker container")
+    public ResponseEntity<String> stopContainer(@RequestParam String containerId) {
+        dockerService.stopContainer(containerId);
+        return ResponseEntity.ok("Container stopped successfully: " + containerId);
+    }
+
+    @DeleteMapping("/containers")
+    @Operation(summary = "Delete a Docker container")
+    public ResponseEntity<String> deleteContainer(@RequestParam String containerId) {
+        dockerService.deleteContainer(containerId);
+        return ResponseEntity.ok("Container deleted successfully: " + containerId);
     }
 }
